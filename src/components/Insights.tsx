@@ -10,7 +10,7 @@ type Tab = typeof TABS[number];
 
 export default function Insights({ state, onNavigate }: Props) {
   const [tab, setTab] = useState<Tab>('Overview');
-  const pred = useMemo(() => getPrediction(state.lastPeriodDate, state.cycleLength, state.periodLength), [state]);
+  const pred = useMemo(() => getPrediction(state.lastPeriodDate, state.cycleLength, state.periodLength, state.logs), [state]);
   const pd = PHASE_DATA[pred.phase];
 
   const logArr = Object.values(state.logs).sort((a,b) => a.date.localeCompare(b.date));

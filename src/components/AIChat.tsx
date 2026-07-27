@@ -12,7 +12,7 @@ const INIT: ChatMessage = {
 };
 
 export default function AIChat({ state, onNavigate }: Props) {
-  const pred = useMemo(() => getPrediction(state.lastPeriodDate, state.cycleLength, state.periodLength), [state]);
+  const pred = useMemo(() => getPrediction(state.lastPeriodDate, state.cycleLength, state.periodLength, state.logs), [state]);
   const initMsg = useMemo(() => ({ ...INIT, text: `Hi ${state.userName || 'there'}! I'm Luna 🌙\n\nI'm your personal menstrual health AI. You're on day ${pred.cycleDay} of your cycle — ${pred.phaseName} phase.\n\nAsk me anything about your cycle, nutrition, symptoms, mood, or fitness. I'll give you personalized advice based on where you are right now.`, time: new Date().toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'}) }), [state.userName, pred]);
 
   const [messages, setMessages] = useState<ChatMessage[]>([initMsg]);

@@ -1,6 +1,6 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import { AppState, Screen, DailyLog } from './types';
-import { addDays, dateKey } from './engine';
+import { addDays } from './engine';
 import Onboarding from './components/Onboarding';
 import Layout from './components/Layout';
 import Home from './components/Home';
@@ -22,8 +22,29 @@ const defaultState: AppState = {
   currentScreen: 'onboard',
 };
 
+const STORAGE_KEY = 'luna-cycle-state-v1';
+
+function loadState(): AppState {
+  try {
+    const saved = localStorage.getItem(STORAGE_KEY);
+    if (!saved) return defaultState;
+    const parsed = JSON.parse(saved);
+    const lastPeriodDate = new Date(parsed.lastPeriodDate);
+    if (!parsed.userName || Number.isNaN(lastPeriodDate.getTime())) return defaultState;
+    return { ...defaultState, ...parsed, lastPeriodDate, currentScreen: 'home' };
+  } catch {
+    return defaultState;
+  }
+}
+
 export default function App() {
-  const [state, setState] = useState<AppState>(defaultState);
+  const [state, setState] = useState<AppState>(loadState);
+
+  useEffect(() => {
+    if (state.userName) {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify({ ...state, currentScreen: 'home' }));
+    }
+  }, [state]);
 
   const navigate = useCallback((screen: Screen) => {
     setState(s => ({ ...s, currentScreen: screen }));
@@ -33,8 +54,8 @@ export default function App() {
     setState(s => ({ ...s, logs: { ...s.logs, [log.date]: log }, currentScreen: 'home' }));
   }, []);
 
-  const finishOnboard = useCallback((name: string, mode: AppState['mode'], lastPeriod: Date, cycleLen: number) => {
-    setState(s => ({ ...s, userName: name, mode, lastPeriodDate: lastPeriod, cycleLength: cycleLen, currentScreen: 'home' }));
+  const finishOnboard = useCallback((name: string, mode: AppState['mode'], lastPeriod: Date, cycleLen: number, periodLen: number) => {
+    setState(s => ({ ...s, userName: name, mode, lastPeriodDate: lastPeriod, cycleLength: cycleLen, periodLength: periodLen, currentScreen: 'home' }));
   }, []);
 
   if (state.currentScreen === 'onboard') {
