@@ -1,7 +1,7 @@
 export type Phase = 'menstrual' | 'follicular' | 'ovulation' | 'luteal';
 export type TrackingMode = 'period' | 'conceive' | 'pregnancy';
 export type FlowLevel = 'none' | 'light' | 'medium' | 'heavy';
-export type Screen = 'home' | 'calendar' | 'log' | 'insights' | 'ai' | 'onboard';
+export type Screen = 'home' | 'calendar' | 'log' | 'insights' | 'history' | 'settings' | 'privacy' | 'ai' | 'onboard';
 
 export interface DailyLog {
   date: string;
@@ -10,7 +10,11 @@ export interface DailyLog {
   flow: FlowLevel | null;
   energy: number;
   sleep: number;
+  cramps?: number;
   notes: string;
+  periodStart?: boolean;
+  periodEnd?: boolean;
+  moonPhase?: string;
 }
 
 export interface CyclePrediction {
@@ -27,13 +31,27 @@ export interface CyclePrediction {
   confidence: number;
 }
 
+export interface Settings {
+  darkMode: boolean;
+  periodReminder: boolean;
+  ovulationReminder: boolean;
+  logReminder: boolean;
+  units: 'metric' | 'imperial';
+  storage: 'local' | 'sync';
+}
+
 export interface AppState {
   userName: string;
   mode: TrackingMode;
   lastPeriodDate: Date;
   cycleLength: number;
   periodLength: number;
+  birthDate?: string;
+  timezone?: string;
+  location?: string;
   logs: Record<string, DailyLog>;
+  periodStarts: string[];
+  settings: Settings;
   currentScreen: Screen;
 }
 

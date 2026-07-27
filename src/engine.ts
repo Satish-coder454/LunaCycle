@@ -15,6 +15,44 @@ export function dateKey(d: Date): string {
   return `${y}-${m}-${day}`;
 }
 
+export const MOON_PHASES = [
+  { name: 'New Moon', icon: '●' },
+  { name: 'Waxing Crescent', icon: '◔' },
+  { name: 'First Quarter', icon: '◐' },
+  { name: 'Waxing Gibbous', icon: '◕' },
+  { name: 'Full Moon', icon: '○' },
+  { name: 'Waning Gibbous', icon: '◕' },
+  { name: 'Last Quarter', icon: '◑' },
+  { name: 'Waning Crescent', icon: '◔' },
+] as const;
+
+/** Julian-date synodic calculation, accurate enough for daily phase tagging. */
+export function getMoonPhase(date: Date) {
+  const utc = Date.UTC(date.getFullYear(), date.getMonth(), date.getDate());
+  const julianDate = utc / 86400000 + 2440587.5;
+  const daysSinceKnownNewMoon = julianDate - 2451550.1;
+  const lunations = daysSinceKnownNewMoon / 29.530588853;
+  const fraction = ((lunations % 1) + 1) % 1;
+  const index = Math.round(fraction * 8) % 8;
+  return { ...MOON_PHASES[index], index, illumination: Math.round((1 - Math.cos(fraction * Math.PI * 2)) * 50) };
+}
+
+export function cycleLengthsFromStarts(starts: string[]): number[] {
+  return Array.from(new Set(starts)).sort().slice(-7).map((value, index, arr) =>
+    index ? daysBetween(new Date(arr[index - 1] + 'T00:00:00'), new Date(value + 'T00:00:00')) : 0
+  ).filter(length => length >= 15 && length <= 60);
+}
+
+export function smartCycleLength(starts: string[], fallback = 28): number {
+  const lengths = cycleLengthsFromStarts(starts).slice(-6);
+  if (!lengths.length) return fallback;
+  return Math.round(lengths.reduce((sum, length) => sum + length, 0) / lengths.length);
+}
+
+export function nextPredictions(lastStart: Date, cycleLength: number, count = 3): Date[] {
+  return Array.from({ length: count }, (_, index) => addDays(lastStart, cycleLength * (index + 1)));
+}
+
 export function getPrediction(lastPeriod: Date, cycleLen: number, periodLen: number, logs: Record<string, DailyLog> = {}): CyclePrediction {
   const today = new Date(); today.setHours(0,0,0,0);
   const diff = daysBetween(lastPeriod, today);
