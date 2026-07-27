@@ -5,7 +5,7 @@ import { getPrediction, PHASE_DATA } from '../engine';
 interface Props { state: AppState; onNavigate: (s: Screen) => void; }
 
 export default function Home({ state, onNavigate }: Props) {
-  const pred = useMemo(() => getPrediction(state.lastPeriodDate, state.cycleLength, state.periodLength), [state]);
+  const pred = useMemo(() => getPrediction(state.lastPeriodDate, state.cycleLength, state.periodLength, state.logs), [state]);
   const pd = PHASE_DATA[pred.phase];
   const circumference = 2 * Math.PI * 52;
   const progress = circumference - (pred.cycleDay / pred.cycleLength) * circumference;

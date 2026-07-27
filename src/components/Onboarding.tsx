@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import { TrackingMode } from '../types';
-import { addDays } from '../engine';
+import { addDays, dateKey } from '../engine';
 
-interface Props { onFinish: (name: string, mode: TrackingMode, lastPeriod: Date, cycleLen: number) => void; }
+interface Props { onFinish: (name: string, mode: TrackingMode, lastPeriod: Date, cycleLen: number, periodLen: number) => void; }
 
 const today = new Date(); today.setHours(0,0,0,0);
 
@@ -10,8 +10,12 @@ export default function Onboarding({ onFinish }: Props) {
   const [step, setStep] = useState(0);
   const [name, setName] = useState('');
   const [mode, setMode] = useState<TrackingMode>('period');
-  const [lastPeriod, setLastPeriod] = useState(addDays(today,-14).toISOString().split('T')[0]);
+  const [lastPeriod, setLastPeriod] = useState(dateKey(addDays(today,-14)));
   const [cycleLen, setCycleLen] = useState(28);
+  const [periodLen, setPeriodLen] = useState(5);
+  const [showSuitabilityCheck, setShowSuitabilityCheck] = useState(false);
+  const commonlyMasculineNames = new Set(['aarav','aditya','ajay','akash','amit','arjun','ashish','daniel','david','john','joseph','michael','mohammed','rahul','raj','rohan','ryan','samuel','satish','vijay']);
+  const mayNeedSuitabilityCheck = commonlyMasculineNames.has(name.trim().toLocaleLowerCase().split(/\s+/)[0]);
 
   const steps = [
     { label: '01', title: 'Welcome to Luna', sub: 'Your intelligent menstrual health companion' },
@@ -23,8 +27,12 @@ export default function Onboarding({ onFinish }: Props) {
   const canNext = step === 0 || (step === 1 && name.trim()) || step === 2 || step === 3;
 
   const handleNext = () => {
+    if (step === 1 && mayNeedSuitabilityCheck && !showSuitabilityCheck) {
+      setShowSuitabilityCheck(true);
+      return;
+    }
     if (step < 3) setStep(s => s + 1);
-    else onFinish(name.trim() || 'there', mode, new Date(lastPeriod + 'T00:00:00'), cycleLen);
+    else onFinish(name.trim() || 'there', mode, new Date(lastPeriod + 'T00:00:00'), cycleLen, periodLen);
   };
 
   return (
@@ -63,11 +71,23 @@ export default function Onboarding({ onFinish }: Props) {
           )}
 
           {step === 1 && (
-            <input value={name} onChange={e => setName(e.target.value)} placeholder="Your first name" autoFocus
+            <>
+            <input value={name} onChange={e => { setName(e.target.value); setShowSuitabilityCheck(false); }} placeholder="Your first name" autoFocus
               onKeyDown={e => e.key==='Enter' && name.trim() && handleNext()}
               style={{ width:'100%', padding:'14px 18px', border:'2px solid #FAD9E8', borderRadius:'12px', fontSize:'16px', outline:'none', transition:'border 0.2s', color:'#1C1917', background:'#FAFAF9' }}
               onFocus={e => e.target.style.borderColor='#E8638C'}
               onBlur={e => e.target.style.borderColor='#FAD9E8'} />
+            {showSuitabilityCheck && (
+              <div role="alert" style={{ marginTop:'14px', padding:'14px', borderRadius:'12px', background:'#FEF3C7', color:'#92400E', fontSize:'13px', lineHeight:1.5 }}>
+                <strong>Quick check</strong><br/>
+                Luna is designed for people who menstruate or who are tracking on someone else's behalf. Names cannot reliably determine gender. If this is the right tracker for you, continue; otherwise edit the name.
+                <div style={{ display:'flex', gap:'8px', marginTop:'10px' }}>
+                  <button onClick={() => { setShowSuitabilityCheck(false); setStep(2); }} style={{ padding:'8px 12px', borderRadius:'9px', background:'#92400E', color:'white' }}>Continue</button>
+                  <button onClick={() => setShowSuitabilityCheck(false)} style={{ padding:'8px 12px', borderRadius:'9px', background:'white', color:'#92400E' }}>Edit name</button>
+                </div>
+              </div>
+            )}
+            </>
           )}
 
           {step === 2 && (
@@ -86,7 +106,7 @@ export default function Onboarding({ onFinish }: Props) {
             <div style={{ display:'flex', flexDirection:'column', gap:'20px' }}>
               <div>
                 <label style={{ display:'block', fontWeight:500, color:'var(--gray-700)', marginBottom:'8px', fontSize:'13px' }}>Last period start date</label>
-                <input type="date" value={lastPeriod} onChange={e => setLastPeriod(e.target.value)} max={today.toISOString().split('T')[0]}
+                <input type="date" value={lastPeriod} onChange={e => setLastPeriod(e.target.value)} max={dateKey(today)}
                   style={{ width:'100%', padding:'13px 16px', border:'2px solid #FAD9E8', borderRadius:'12px', fontSize:'15px', outline:'none', color:'#1C1917', background:'#FAFAF9' }}
                   onFocus={e => e.target.style.borderColor='#E8638C'} onBlur={e => e.target.style.borderColor='#FAD9E8'} />
               </div>
@@ -96,6 +116,14 @@ export default function Onboarding({ onFinish }: Props) {
                   style={{ width:'100%', height:'6px', accentColor:'#E8638C', borderRadius:'3px' }} />
                 <div style={{ display:'flex', justifyContent:'space-between', fontSize:'12px', color:'var(--gray-400)', marginTop:'4px' }}>
                   <span>21 days</span><span>45 days</span>
+                </div>
+              </div>
+              <div>
+                <label style={{ display:'block', fontWeight:500, color:'var(--gray-700)', marginBottom:'8px', fontSize:'13px' }}>Typical period length: <span style={{ color:'#E8638C', fontWeight:700 }}>{periodLen} days</span></label>
+                <input type="range" min={2} max={10} value={periodLen} onChange={e => setPeriodLen(+e.target.value)}
+                  style={{ width:'100%', height:'6px', accentColor:'#E8638C', borderRadius:'3px' }} />
+                <div style={{ display:'flex', justifyContent:'space-between', fontSize:'12px', color:'var(--gray-400)', marginTop:'4px' }}>
+                  <span>2 days</span><span>10 days</span>
                 </div>
               </div>
             </div>

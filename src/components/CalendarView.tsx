@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { AppState, Screen } from '../types';
-import { getDayClass, getPrediction, PHASE_DATA, dateKey, addDays } from '../engine';
+import { getDayClass, getPrediction, PHASE_DATA, dateKey } from '../engine';
 
 interface Props { state: AppState; onNavigate: (s: Screen) => void; }
 
@@ -8,7 +8,7 @@ export default function CalendarView({ state, onNavigate }: Props) {
   const today = useMemo(() => { const d = new Date(); d.setHours(0,0,0,0); return d; }, []);
   const [month, setMonth] = useState(new Date(today.getFullYear(), today.getMonth(), 1));
   const [selectedDay, setSelectedDay] = useState<Date | null>(today);
-  const pred = useMemo(() => getPrediction(state.lastPeriodDate, state.cycleLength, state.periodLength), [state]);
+  const pred = useMemo(() => getPrediction(state.lastPeriodDate, state.cycleLength, state.periodLength, state.logs), [state]);
 
   const daysInMonth = new Date(month.getFullYear(), month.getMonth()+1, 0).getDate();
   const firstDay = new Date(month.getFullYear(), month.getMonth(), 1).getDay();
@@ -51,7 +51,7 @@ export default function CalendarView({ state, onNavigate }: Props) {
 
         {/* Legend */}
         <div style={{ display:'flex', gap:'12px', overflowX:'auto', paddingBottom:'12px', scrollbarWidth:'none' }}>
-          {[['#E8638C','Period'],['#A78BFA','Fertile'],['#2DD4BF','Ovulation'],['#FAD9E8','Predicted'],['#2DD4BF','Logged']] .map(([c,l]) => (
+          {[['#E8638C','Period'],['#A78BFA','Fertile'],['#2DD4BF','Ovulation'],['#FAD9E8','Predicted'],['#2DD4BF','Logged']].map(([c,l]) => (
             <div key={l} style={{ display:'flex', alignItems:'center', gap:'4px', flexShrink:0 }}>
               <div style={{ width:'8px', height:'8px', borderRadius:'50%', background:c }} />
               <span style={{ fontSize:'11px', color:'var(--gray-500)', whiteSpace:'nowrap' }}>{l}</span>
